@@ -27,8 +27,10 @@ namespace ActorsVsRx.Actors
                     context.Send(context.Self!, SendData.Instance);
                     break;
                 case SendData _:
-                    context.Send(_dataActor, new Data(++_data));
-                    var delay = TimeSpan.FromSeconds(_rand.NextDouble() * 0.1);
+                    var message = new Data(++_data);
+                    // Console.WriteLine($"Sending data: {message.Value}");
+                    context.Send(_dataActor, message);
+                    var delay = TimeSpan.FromSeconds(0.2 + _rand.NextDouble() * 0.1);
                     _scheduler.ScheduleTellOnce(delay, context.Self!, SendData.Instance);
                     break;
             }

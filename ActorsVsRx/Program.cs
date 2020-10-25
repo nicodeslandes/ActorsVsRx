@@ -8,7 +8,7 @@ namespace ActorsVsRx
 {
     public class Program
     {
-        public static void Main()
+        public static async Task Main()
         {
             var system = new ActorSystem();
 
@@ -21,30 +21,10 @@ namespace ActorsVsRx
             // Data source: produce random Data message every few ms
             system.Root.Spawn(Props.FromProducer(() => new DataProducer(buffer)));
 
-            // Trigger: send a trigger message every second or so
-            system.Root.Spawn(Props.FromFunc(ctx =>
-            {
-                var rand = new Random();
-                void ScheduleNextTrigger()
-                {
-                    var delay = TimeSpan.FromSeconds(1 + rand.NextDouble() * 0.3);
-                    ctx.ReenterAfter(Task.Delay(delay), () => ctx.Send(ctx.Self!, Trigger.Instance));
-                }
-
-                switch (ctx.Message)
-                {
-                    case Started _:
-                        ScheduleNextTrigger();
-                        break;
-                    case Trigger _:
-                        ctx.Send(buffer, Trigger.Instance);
-                        Console.WriteLine("Sending next trigger");
-                        ScheduleNextTrigger();
-                        break;
-                }
-
-                return Task.CompletedTask;
-            }));
+            // Send trigger message after a bit
+            await Task.Delay(TimeSpan.FromSeconds(2));
+            Console.WriteLine("Sending Trigger");
+            system.Root.Send(buffer, Trigger.Instance);
 
             Console.ReadLine();
         }
